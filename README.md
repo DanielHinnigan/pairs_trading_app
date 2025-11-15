@@ -1,5 +1,5 @@
 # Pairs Trading Platform
-A local web-based platform used for simple analysis of pairs of stocks. This project was developed as a personal project. As such, the platform is not fully developed, has poor performance, and needs refining with regards to documentation. 
+A local web-based platform used for simple analysis of pairs of stocks. This project was developed as a personal project. As such, the platform is not fully developed, has poor performance, lacks error-handling, and needs refining with regards to documentation. 
 
 The platform can pull historical price data from several user-defined ticker symbols using yahoo finance. A series of pairs of two stocks are then found by iterating over every possible pair of stocks, then constructing a linear regression of one log price as a function of the other log price using least-squares for minimization. The residuals are then tested for stationarity using the Augmented Dickey–Fuller test. If the Null Hypothesis is rejected, we regard the two stocks to be cointegrated, and as such, can be used for pairs trading. 
 

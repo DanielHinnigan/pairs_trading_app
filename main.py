@@ -28,7 +28,7 @@ st.title("Control Tickers to Check")
 # Display the table with embedded controls
 st.subheader("Tickers")
 
-file_tickers = st.file_uploader("Upload file containing tickers. The tickers need to be in a column labelled 'Ticker'")
+file_tickers = st.file_uploader("Upload file containing tickers. The tickers need to be in a column labelled 'Ticker'. For example, use the example_symbols.csv file located under the data folder")
 if file_tickers is not None:
         df = pd.read_csv(file_tickers)["Ticker"]
         st.session_state.ticker_df = pd.concat([st.session_state.ticker_df, df], ignore_index=True)
@@ -43,7 +43,7 @@ with table_container:
         st.rerun()
 
     # Display headers
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns(2)
     with col1:
         st.write("**Ticker**")
     with col2:
@@ -54,7 +54,7 @@ with table_container:
     rows_to_delete = []
     for idx in range(len(st.session_state.ticker_df)):
         row = st.session_state.ticker_df.iloc[idx]
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns(2)
         
         with col1:
             # Editable name field
@@ -102,9 +102,9 @@ if rows_to_delete:
 
 st.title("Find Pairs")
 st.button("Calculate Pairs", on_click=calculate_pairs)
-pairs_container = st.container()
+pairs_container = st.container(height=500)
 with pairs_container:
-    col1, col2, col3, col4, col5 = st.columns([5, 4, 3,2,1])
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         st.write("**Pair ID**")
     with col2:
@@ -119,7 +119,7 @@ with pairs_container:
 
     for idx in range(len(st.session_state.pairs)):
         row = st.session_state.pairs[idx]
-        col1, col2, col3, col4, col5 = st.columns([5, 4, 3, 2, 1])
+        col1, col2, col3, col4, col5 = st.columns(5)
 
         with col1:
             id = st.text_input(
@@ -226,6 +226,40 @@ if st.button("Try Trading Rule"):
     # ------------ Plot showing positions on price plot
     fig1 = go.Figure()
     fig2 = go.Figure()
+
+
+    # Initial data
+    end_date = trades[0]["Date"]
+    end_idx = pair["Dates"].get_loc(end_date)
+    data_to_plot = {
+            "Dates": pair["Dates"][:end_idx],
+            "Log Price 1": pair["Log Price 1"][:end_idx],
+            "Log Price 2": pair["Log Price 2"][:end_idx],
+            "Spread": pair["Log Price 1"][:end_idx]-pair["Coefficient"]*pair["Log Price 2"][:end_idx]
+    }
+    fig1.add_trace(go.Scatter(
+                x=data_to_plot["Dates"],
+                y=data_to_plot["Log Price 1"],
+                mode="lines",
+                name="No Position",
+                line=dict(color="grey", width=1)
+    ))
+    fig1.add_trace(go.Scatter(
+        x=data_to_plot["Dates"],
+        y=data_to_plot["Log Price 2"],
+        mode="lines",
+        name="No Position",
+        line=dict(color="grey", width=1)
+    ))
+    fig2.add_trace(go.Scatter(
+        x=data_to_plot["Dates"],
+        y=data_to_plot["Spread"],
+        mode="lines",
+        name="No Position",
+        line=dict(color="grey", width=1)
+    ))
+
+    # Start of trading strategy data
     for idx in range(len(trades)-1):
         start_date = trades[idx]["Date"]
         end_date = trades[idx+1]["Date"]
@@ -286,14 +320,20 @@ if st.button("Try Trading Rule"):
                 line=dict(color="blue", width=1)
             ))
 
-    fig2.add_hline(upper_bound, line_width=1)
-    fig2.add_hline(lower_bound, line_width=1)
+    fig2.add_hline(upper_bound, line_width=1, line_color="red")
+    fig2.add_hline(lower_bound,line_width=1, line_color="green")
 
     fig1.update_layout(
-        showlegend=False
+        title=f"Log Prices of {pair["Ticker 1"]} and {pair["Ticker 2"]}",
+        showlegend=False,
+        xaxis_title="Date",
+        yaxis_title="Log Price"
     )
     fig2.update_layout(
-        showlegend=False
+        title=f"Spread of {pair["Ticker 1"]} and {pair["Ticker 2"]} using log prices",
+        showlegend=False,
+        xaxis_title="Date",
+        yaxis_title="Spread"
     )
     st.plotly_chart(fig1, use_container_width=True)
     st.plotly_chart(fig2, use_container_width=True)
@@ -306,11 +346,11 @@ if st.button("Try Trading Rule"):
         with col1:
             st.write("**Order Type**")
         with col2:
-            st.write(f"**Price of {pair['Ticker 1']}**")
+            st.write(f"**Price of {pair['Ticker 1']} (USD)**")
         with col3:
-            st.write(f"**Price of {pair['Ticker 2']}**")
+            st.write(f"**Price of {pair['Ticker 2']} (USD)**")
         with col4:
-            st.write(f"**Spread**")
+            st.write(f"**Spread (USD)**")
         with col5:
             st.write(f"**Date**")
 
